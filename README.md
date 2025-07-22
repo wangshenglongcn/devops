@@ -281,6 +281,50 @@ detail()和results()视图都很精简，但存在冗余问题，显示投票列
 
 #### 改良URLconf
 
+适配使用通用视图
+```python
+from django.urls import path
+
+from . import views
+
+app_name = "polls"
+urlpatterns = [
+    path("", views.IndexView.as_view(), name="index"),
+    # url匹配时，会将匹配到的int赋值给question_id或pk
+    path("<int:pk>/", views.DetailView.as_view(), name="detail"),
+    path("<int:pk>/results/", views.ResultView.as_view(), name="results"),
+    path("<int:question_id>/vote/", views.vote, name="vote")
+```
+
 #### 改良视图
 
+通用视图都继承自 django.views.generic
+ListView 展示一个对象的列表
+DetailView 展示一个对象的详细信息
+
+如下所示
+```python
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, HttpResponseRedirect
+from django.db.models import F
+from django.urls import reverse
+from django.views import generic
+
+from .models import Question, Choice
+
+class IndexView(generic.ListView):
+    template_name = "polls/index.html"
+    context_object_name = "question_list"
+    def get_queryset(self):
+        return Question.objects.order_by("-pub_date")[:5]
+
+
+class DetailView(generic.DetailView):
+    model = Question
+    template_name = "polls/detail.html"
+
+class ResultView(generic.DetailView):
+    model = Question
+    template_name = "polls/results.html"
+```
 
