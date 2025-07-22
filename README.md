@@ -255,7 +255,7 @@ urlpatterns = [
 ]
 ```
 
-配置后，html中使用polls::detail来访问对应url，如
+配置后，html中使用polls:detail来访问对应url，如
 ```html
-<a href="{% url 'polls::detail' question.id %}">{{ question.question_text }}</a>
+<a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a>
 ```
