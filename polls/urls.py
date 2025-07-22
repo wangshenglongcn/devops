@@ -2,6 +2,7 @@ from django.urls import path
 
 from . import views
 
+app_name = "polls"
 urlpatterns = [
     path("", views.index, name="index"),
     # url匹配是，会将匹配到的int赋值给question_id

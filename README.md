@@ -122,7 +122,6 @@ python manage.py createsuperuser
 ```python
 from django.contrib import admin
 
-# Register your models here.
 from .models import Question
 
 admin.site.register(Question)
@@ -145,4 +144,118 @@ urlpatterns = [
     path("<int:question_id>/results/", views.results, name="results"),
     path("<int:question_id>/vote/", views.vote, name="vote")
 ]
+```
+
+### 写一个有用的视图
+
+每个视图必须做的只有两件事：返回一个HttpResponse对象或者抛出一个异常，如Http404，其余的均自定义
+
+假如我们写一个展示Question最新5条数据的视图，可以使用如下代码：
+```python
+def index(request):
+    question_list = Question.objects.order_by("-pub_date")[:5]
+    resp = "\n".join([q.question_text for q in question_list])
+    return HttpResponse(resp)
+```
+
+但是存在一个问题，我们不可能一直这样手写格式，这时我们需要模板去渲染数据。
+
+#### 使用模板渲染
+
+在polls应用下创建templates/polls目录，将模板放在这个目录下
+
+>虽然我们现在可以将模板文件直接放在 polls/templates 文件夹中（而不是再建立一个 polls 子文件夹），但是这样做不太好。Django 将会选择第一个匹配的模板文件，如果你有一个模板文件正好和另一个应用中的某个模板文件重名，Django 没有办法 区分 它们。我们需要帮助 Django 选择正确的模板，最好的方法就是把他们放入各自的 命名空间 中，也就是把这些模板放入一个和 自身 应用重名的子文件夹里。
+
+```html
+{% if question_list %}
+    <ul>
+    {% for question in question_list %}
+        <li><a href="/polls/{{ question.id }}/">{{ question.question_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
+```
+
+html文件中使用了django模板语言，参考[Django模板](https://docs.djangoproject.com/zh-hans/5.2/topics/templates/)
+
+而在视图中，进行以下修改
+引入的loader用来加载模板；template.render是对象方法，渲染模板
+```py
+from django.shortcuts import render
+from django.http import HttpResponse
+from .models import Question
+from django.template import loader
+
+def index(request):
+    question_list = Question.objects.order_by("-pub_date")[:5]
+    template = loader.get_template("polls/index.html")
+    context = {"question_list": question_list}
+    return HttpResponse(template.render(context, request))
+```
+
+由于载入模板，加载对象，并基于模板生成HttpResponse对象是一个很常用的流程，所以django提供了快捷方法：
+无需导入 loader 以及 HttpResponse
+```py
+from django.shortcuts import render
+from .models import Question
+
+def index(request):
+    question_list = Question.objects.order_by("-pub_date")[:5]
+    context = {"question_list": question_list}
+    return render(request, "polls/index.html", context)
+```
+
+#### 抛出404错误
+
+一种方法是用try-except来捕获并抛出，另一种是使用django定义的快捷函数get_object_or_404
+
+```python
+from django.shortcuts import render, get_object_or_404
+from .models import Question
+
+def detail(request, question_id):
+    question = get_object_or_404(Question, pk=question_id)
+    return render(request, "polls/detail.html", {"question": question})
+
+```
+
+也有get_list_or_404，原理类型，列表为空就报404
+
+### 去除硬编码
+
+之前在index.html中链接是硬编码的
+```html
+<a href="/polls/{{ question.id }}/">{{ question.question_text }}</a>
+```
+
+但是，由于在polls.urls中定义了name，所以可以用以下方式：
+```html
+<a href="{% url 'detail' question.id %}">{{ question.question_text }}</a>
+```
+
+### 为url添加命名空间
+
+在实际应用中，一个项目可能不止一个应用，Django如何分辨重名的url呢？
+
+在根URLconf中添加命名空间app_name，如polls/urls.py
+```python
+from django.urls import path
+
+from . import views
+
+app_name = "polls"
+urlpatterns = [
+    path("", views.index, name="index"),
+    # url匹配是，会将匹配到的int赋值给question_id
+    path("<int:question_id>/", views.detail, name="detail"),
+    path("<int:question_id>/results/", views.results, name="results"),
+    path("<int:question_id>/vote/", views.vote, name="vote")
+]
+```
+
+配置后，html中使用polls::detail来访问对应url，如
+```html
+<a href="{% url 'polls::detail' question.id %}">{{ question.question_text }}</a>
 ```
