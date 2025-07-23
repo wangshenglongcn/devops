@@ -1,0 +1,7 @@
+{% for post in posts %}
+<div>
+    <h1>标题：{{post.title}}</h1>
+    <p>发布时间：{{post.publish_date}}</p>
+    <p>内容：{{post.text}}</p>
+</div>
+{% endfor %}
