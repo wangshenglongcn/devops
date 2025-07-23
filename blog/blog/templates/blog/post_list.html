@@ -1,31 +1,12 @@
-{% load static %}
-<html>
-    <head>
-        <title>Django Blog</title>
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
-        <link href="//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext" rel="stylesheet" type="text/css">
-        <link rel="stylesheet" href="{% static 'css/blog.css' %}">
-    </head>
-    <body>
-        <div class="page-header">
-            <h1><a href="/">Django Blog</a></h1>
-        </div>
-        <div class="content container">
-            <div class="row">
-                <div class="col-md-8">
-                    {% for post in posts %}
-                    <div class="post">
-                        <h1><a href="">标题：{{post.title}}</a></h1>
-                        <p>发布时间：{{post.publish_date}}</p>
-                        <p>内容：{{post.text}}</p>
-                    </div>
-                    <hr>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </body>
-</html>
+{% extends 'blog/base.html' %}
 
-
+{% block content %}
+    {% for post in posts %}
+        <div class="post">
+            <div class="date">发布时间：{{post.publish_date}}</div>
+            <h1><a href="{% url 'post_detail' pk=post.pk %}">标题：{{post.title}}</a></h1>
+            <p>内容：{{post.text}}</p>
+        </div>
+        <hr>
+    {% endfor %}
+{% endblock %}
