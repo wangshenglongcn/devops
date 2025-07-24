@@ -5,3 +5,10 @@
 
 
 ### 2. 用docker compose将该网站部署
+
+### 3. 增加Nginx反向代理，隐藏端口显示
+
+## 效果图
+
+<img width="1367" height="1009" alt="图片" src="https://github.com/user-attachments/assets/6c489488-695e-4c76-be83-f879ce997676" />
+
