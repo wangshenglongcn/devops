@@ -1,50 +1,56 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
 from django.utils import timezone
+import json
+from django.views.decorators.csrf import csrf_exempt
 from .models import Post
-from .forms import PostForm
 
 
+@csrf_exempt
+@require_http_methods(['GET', 'POST'])
 def post_list(request):
-    posts = Post.objects.filter(publish_date__lte=timezone.now()).order_by('-publish_date')
-    return render(request, 'blog/post_list.html', {'posts': posts})
+    if request.method == 'GET':
+        posts = Post.objects.filter(publish_date__lte=timezone.now()).order_by('-publish_date')
+        posts_list = list(posts.values('id', 'title', 'text', 'publish_date'))
+        return JsonResponse(posts_list, safe=False)
+    else:
+        try:
+            data = json.loads(request.body)
+            title = data.get('title')
+            text = data.get('text')
+            if not title or not text:
+                return JsonResponse({'success': 'false', 'desc': f'title 和 text不能为空'}, status=400)
+            
+            post = Post.objects.create(
+                title=title, text=text, author=request.user,
+                publish_date=timezone.now()
+            )
+            return JsonResponse({'success': 'true', 'id': post.id, 'decs': f'已成功新建{post.pk}'}, status=201)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': 'false', 'desc': '无效的JSON'}, status=400)
 
+@csrf_exempt    
+@require_http_methods(['GET', 'PUT', 'DELETE'])
 def post_detail(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    return render(request, 'blog/post_detail.html', {'post': post})
-
-def post_new(request):
-    if request.method == 'POST':
-        form = PostForm(request.POST)
-        if form.is_valid():
-            post = form.save(commit=False)  # 保存但不立即写入数据库
-            post.author = request.user
-            post.publish_date = timezone.now()
-            post.save()
-            return redirect('post_detail', pk=post.pk)
-    else:
-        form = PostForm()
-
-    return render(request, 'blog/post_edit.html', {'form': form})
-
-
-def post_edit(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    if request.method == "POST":
-        form = PostForm(request.POST, instance=post)  # 用新数据覆盖 post中旧数据，无新数据则显示旧数据
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.published_date = timezone.now()
-            post.save()
-            return redirect('post_detail', pk=post.pk)
-    else:
-        form = PostForm(instance=post)
-    return render(request, 'blog/post_edit.html', {'form': form})
-
-
-def remove_post(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    if request.Method == 'POST':
-        post.delete()
+    try:
+        post = Post.objects.get(pk=pk)
+    except Post.DoesNotExist:
+        return JsonResponse({'success': 'false', 'desc': f'没有找到id为{pk}的文章'}, status=400)
     
-    return redirect('post_list')
+    if request.method == 'GET':
+        return JsonResponse({
+            'id': post.id, 'title': post.title,
+            'text': post.text, 'publish_date': post.publish_date
+        })
+    elif request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            post.title = data.get('title', post.title)
+            post.text = data.get('text', post.text)
+            post.save()
+            return JsonResponse({'success': 'true', 'desc': f'已更新 {post.id}'})
+        except json.JSONDecodeError:
+            return JsonResponse({'success': 'false', 'desc': '无效的JSON'}, status=400)
+    elif request.method == 'DELETE':
+        post.delete()
+        return JsonResponse({'success': 'true', 'desc': f'已删除{pk}'}, status=204)
