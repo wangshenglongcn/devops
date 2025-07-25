@@ -35,3 +35,7 @@
 | posts/id/ | DELETE |  删除现有文章 |
 
 用postman测试参数合法及不合法的情况，返回json数据及返回码均合乎预期。
+
+## 效果图
+
+<img width="1515" height="881" alt="图片" src="https://github.com/user-attachments/assets/25e8d241-c158-4ea4-ba0c-ffcab30289e4" />
