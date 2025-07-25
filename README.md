@@ -1,6 +1,6 @@
 ## 简略实现了一个Django RESTFUL API后端
 
-### 1. 用django写了博客后端和前端
+### 1. 用django简略写了博客后端和前端
 
 ### 2. 用docker compose将该网站部署
 
@@ -39,3 +39,10 @@
 ## 效果图
 
 <img width="1515" height="881" alt="图片" src="https://github.com/user-attachments/assets/25e8d241-c158-4ea4-ba0c-ffcab30289e4" />
+
+
+## 继续完善前端
+
+这时的后端是存在put、delete等方法，常规的html只能实现get、post请求，所以这里我们需要用js去实现。
+
+前端部分我将其跟后端分离，放到另一个分支中，blog_frontend。
