@@ -2,11 +2,19 @@
 
 {% block content %}
     {% for post in posts %}
-        <div class="post">
-            <div class="date">发布时间：{{post.publish_date}}</div>
-            <h1><a href="{% url 'post_detail' pk=post.pk %}">标题：{{post.title}}</a></h1>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="row h1">
+                <a href="{% url 'post_detail' pk=post.pk %}">标题：{{post.title}}</a>
+            </div>
+        </div>
+        <div class="col-md-12 text-end">
+            发布时间：{{post.publish_date}}
+        </div>
+        <div class="col-md-12">
             <p>内容：{{post.text}}</p>
         </div>
-        <hr>
+    </div>
+    <hr>
     {% endfor %}
 {% endblock %}
