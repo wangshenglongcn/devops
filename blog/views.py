@@ -32,6 +32,26 @@ def post_create(request):
     return render(request, "blog/post_create.html", {"form": form})
 
 
+def post_edit(request, id):
+    post = get_object_or_404(Posts, id=id)
+
+    # 可选权限判断：只有作者或超级用户可以编辑
+    if request.user != post.author and not request.user.is_superuser:
+        messages.error(request, "你没有权限编辑这篇文章")
+        return redirect("post_detail", id=id)
+
+    if request.method == "POST":
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "文章更新成功")
+            return redirect("post_detail", id=id)
+    else:
+        form = PostForm(instance=post)
+
+    return render(request, "blog/post_create.html", {"form": form})
+
+
 def post_delete(request, id):
     storage = messages.get_messages(request)
     storage.used = True
