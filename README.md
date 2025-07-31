@@ -86,6 +86,13 @@ class Posts(models.Model):
 
 前端除了django自带的模板语言外，其余格式大部分用bootstrap实现
 
+## 适配生产环境
+
+修改mysite/settings.py
+
+1. DEBUG改为False
+2. 增加STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 以便正常执行python manage.py collectstatic
+无其他适配的话会在跟manage.py同级目录下生产staticfiles目录
 
 ## 参考文档
 
