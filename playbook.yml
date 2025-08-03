@@ -1,0 +1,13 @@
+- name: play1
+  hosts: all
+  tasks:
+    - name: Ensure directory exists
+      file:
+        path: /home/demo
+        state: directory
+        mode: '0755'
+
+    - name: Copy local file to remote
+      copy:
+        src: ./demo
+        dest: /home/demo/demo
