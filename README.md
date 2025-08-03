@@ -173,13 +173,21 @@ msg: "{{ var }}"
 
 inventory同级目录下yml，如：`inventory/group_vars/linux.yml`
 
+注意这里的yml文件名要跟inventory清单中可以找到
+
 3. playbook group vars
 
 playbook同级目录下yml，如：`group_vars/linux.yml`
 
+```yaml
+my_string: playbook group vars
+```
+
 4. inventory host vars
 
-inventory同级目录下yml，如：`inventory/host_vars/ip_addr.yml`
+inventory同级目录下yml，如：`inventory/host_vars/192.168.1.1.yml`
+
+这里的yml文件名也同理，需要能在inventory清单中找到
 
 5. playbook host vars
 
@@ -189,58 +197,134 @@ playbook同级目录下yml，如：`host_vars/ip_addr.yml`
 
 在playbook中定义变量，如：
 ```yaml
-- name: Demo
+- name: demo
   hosts: all
   vars:
-    app_env: staging
-  
+    my_string: playbook var
+
   tasks:
-    - name: task1
-      ...
+    - name:
+      debug:
+        msg: "my_string is: {{ my_string }}"
 ```
 
-7. play var file
+7. play var file通过vars_files引用
 
-在playbook中引用外部变量文件，如：
+common.yml
 ```yaml
-- name: xxx
-  host: xxx
-  var_files:
-    - vars/common.yml
-    - vars/extra.yml
-  
-  ...
+my_string: include var files
+```
+
+playbook.yml
+```yaml
+- name: demo
+  hosts: all
+  vars_files:
+    - common.yml
+  vars:
+    my_string: playbook var
+
+  tasks:
+    - name:
+      debug:
+        msg: "my_string is: {{ my_string }}"
+    - name:
+      debug:
+        msg: "my_string is: {{ my_string }}"
+```
+
+8. task var
+
+在task任务内部定义变量
+
+common.yml
+```yaml
+my_string: include var files
+```
+
+playbook.yml
+```yaml
+- name: demo
+  hosts: all
+  vars_files:
+    - common.yml
+  vars:
+    my_string: playbook var
+
+  tasks:
+    - name:
+      debug:
+        msg: "my_string is: {{ my_string }}"
+    - name:
+      vars:
+        my_string: task var
+      debug:
+        msg: "my_string is: {{ my_string }}"  # task var
+```
+
+8. 通过include_vars引用变量
+
+common.yml
+```yaml
+my_string: include var files
+```
+
+playbook.yml
+```yaml
+- name: demo
+  hosts: all
+  vars_files:
+    - common.yml
+  vars:
+    my_string: playbook var
+
+  tasks:
+    - name:
+      debug:
+        msg: "my_string is: {{ my_string }}"
+    - name:
+      include_vars: common.yml
+    - name:
+      vars:
+        my_string: task var
+      debug:
+        msg: "my_string is: {{ my_string }}"  # include var files
 ```
 
 8. set fact
 
 在playbook或task中用set_fact定义，如：
 ```yaml
-- name: Demo set_fact example
+- name: demo
   hosts: all
-  gather_facts: false
-
+  vars_files:
+    - common.yml
   vars:
-    initial_var: "hello"
+    my_string: playbook var
 
   tasks:
-    - name: Print initial var
+    - name: first print
       debug:
-        msg: "initial_var is {{ initial_var }}"
-
-    - name: Set a new fact
-      set_fact:
-        dynamic_var: "{{ initial_var }} world"
-
-    - name: Use dynamic var
+        msg: "my_string is: {{ my_string }}"
+    - set_fact:
+        my_string: "set fact var"
+    - name:
+      include_vars: common.yml
+    - name: second print
+      vars:
+        my_string: task var
       debug:
-        msg: "dynamic_var is {{ dynamic_var }}"
-
+        msg: "my_string is: {{ my_string }}"  # set fact var
 ```
 
 9. extra vars -e
 
 在执行时传参，如`ansible-playbook playbook.yml -e "port=9000"`
+
+假如参数带空格，要多加一层引号，如：
+```shell
+ansible-playbook playbook.yml -e "my_string='extra var'"
+```
 
 
 ## Roles
