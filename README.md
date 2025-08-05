@@ -19,7 +19,15 @@ autocmd FileType yaml setlocal ai et sw=2 ts=2 sts=2 cuc
 
 Ubuntu
 ```shell
-apt-get install ansible
+sudo apt update
+sudo apt install -y software-properties-common
+sudo add-apt-repository --yes --update ppa:ansible/ansible-2.14
+sudo apt install -y ansible
+```
+
+也可以通过python pip安装：
+```shell
+pip install ansible-core==2.14.7 ansible==7.7.0
 ```
 
 ## 配置密钥
@@ -329,3 +337,118 @@ ansible-playbook playbook.yml -e "my_string='extra var'"
 
 ## Roles
 
+Roles是集成多个任务、变量、模板等数据，使其可以轻易被其他playbook调用
+
+以下是一个docker实例
+
+
+在此之前，需要通过以下命令安装docker相关模块
+
+```shell
+ansible-galaxy collection install community.docker
+```
+
+然后通过`ansible-galaxy init role_name`来初始化，这里的role_name自定义
+
+```shell
+ansible-galaxy init docker_container
+```
+
+生成的目录结构如下：
+
+```
+├── docker_container
+│   ├── defaults
+│   │   └── main.yml
+│   ├── handlers
+│   │   └── main.yml
+│   ├── meta
+│   │   └── main.yml
+│   ├── README.md
+│   ├── tasks
+│   │   └── main.yml
+│   ├── tests
+│   │   ├── inventory
+│   │   └── test.yml
+│   └── vars
+│       └── main.yml
+
+```
+
+- defaults/main.yml: 记录默认变量
+```yaml
+docker_package: docker.io
+docker_service: docker
+
+container_name: my_container
+image_name: nginx:latest
+host_port: 3000
+container_port: 80
+```
+- handlers/main.yml: 触发重启容器
+
+- meta/main.yml: 角色元数据
+- tasks/main.yml: 核心任务
+
+```yaml
+---
+- name: 确保docker已安装
+  ansible.builtin.apt:
+    name: "{{ docker_package }}"
+    state: present  # 不存在则安装，否则无操作
+    update_cache: true
+  become: true
+
+- name: 确保docker已运行
+  ansible.builtin.service:  # 底层调用systemctl
+    name: "{{ docker_service }}"
+    state: started
+    enabled: true  # 开机自启
+  become: true
+
+- name: docker换源
+  ansible.builtin.copy:
+    content: |
+      {
+        "registry-mirrors": [
+          "https://docker.m.daocloud.io"
+        ]
+      }
+    dest: /etc/docker/daemon.json
+
+- name: 重启docker
+  ansible.builtin.service:
+    name: "{{ docker_service }}"
+    state: restarted
+  become: true
+
+- name: 拉取镜像
+  community.docker.docker_image:
+    name: "{{ image_name }}"
+    source: pull
+  become: true
+
+- name: 启动容器
+  community.docker.docker_container:
+    image: "{{ image_name }}"
+    name: "{{ container_name }}"
+    state: started
+    detach: true
+    restart_policy: always  # 容器停止后总是自动重启
+    published_ports:  # 端口映射
+      - "{{ host_port }}:{{ container_port }}"
+  become: true
+
+```
+
+- tests/main.yml: 
+- vars/main.yml: 视情况而定，可定义优先级更高的变量
+
+调用
+
+```yaml
+- hosts: all
+  become: yes
+  roles:
+    - docker_container
+```
