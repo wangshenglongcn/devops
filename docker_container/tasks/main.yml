@@ -1,0 +1,49 @@
+---
+# tasks file for docker_container
+
+- name: 确保docker已安装
+  ansible.builtin.apt:
+    name: "{{ docker_package }}"
+    state: present  # 不存在则安装，否则无操作
+    update_cache: true
+  become: true
+
+- name: 确保docker已运行
+  ansible.builtin.service:  # 底层调用systemctl
+    name: "{{ docker_service }}"
+    state: started
+    enabled: true  # 开机自启
+  become: true
+
+- name: docker换源
+  ansible.builtin.copy:
+    content: |
+      {
+        "registry-mirrors": [
+          "https://docker.m.daocloud.io"
+        ]
+      }
+    dest: /etc/docker/daemon.json
+
+- name: 重启docker
+  ansible.builtin.service:
+    name: "{{ docker_service }}"
+    state: restarted
+  become: true
+
+- name: 拉取镜像
+  community.docker.docker_image:
+    name: "{{ image_name }}"
+    source: pull
+  become: true
+
+- name: 启动容器
+  community.docker.docker_container:
+    image: "{{ image_name }}"
+    name: "{{ container_name }}"
+    state: started
+    detach: true
+    restart_policy: always  # 容器停止后总是自动重启
+    published_ports:  # 端口映射
+      - "{{ host_port }}:{{ container_port }}"
+  become: true

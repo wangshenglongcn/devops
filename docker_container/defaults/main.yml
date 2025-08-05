@@ -1,0 +1,10 @@
+---
+# defaults file for docker_container
+
+docker_package: docker.io
+docker_service: docker
+
+container_name: my_container
+image_name: nginx:latest
+host_port: 3000
+container_port: 80

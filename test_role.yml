@@ -1,0 +1,4 @@
+- hosts: aliyun
+  become: true
+  roles:
+    - docker_container
