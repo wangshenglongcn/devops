@@ -1,2 +1,4 @@
----
-# handlers file for docker_container
+- name: restart docker
+  ansible.builtin.service:
+    name: "{{ docker_service }}"
+    state: restarted
