@@ -1,18 +1,21 @@
 services: 
   django: 
-    build: .
+    build: django/
     volumes:
       - static_volume:/app/staticfiles   # 把 staticfiles 映射出来
     ports: 
       - "8000:8000"
+      - "8001:8001"
+      - "8002:8002"
 
   nginx:
-    image: nginx:alpine
+    build: nginx/
     volumes:
       - static_volume:/app/staticfiles   # 和 django 共享静态文件
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - django
 
