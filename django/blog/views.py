@@ -2,18 +2,33 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
+from django.core.cache import cache
 
 from .models import Posts
 from .forms import PostForm, RegisterForm
 
 
 def post_list(request):
-    posts = Posts.objects.all()[:5]
+    posts = cache.get("posts")
+    if not posts:
+        # print("文章列表无缓存，从数据库中获取")
+        posts = Posts.objects.all()[:5]
+        cache.set("posts", posts, timeout=60)
+    # else:
+    #     print("文章列表有缓存，直接返回")
+
     return render(request, "blog/post_list.html", {"posts": posts})
 
 
 def post_detail(request, id):
-    post = get_object_or_404(Posts, id=id)
+    post = cache.get(f"post_{id}")
+    if not post:
+        # print(f"文章{id}无缓存，从数据库中获取")
+        post = get_object_or_404(Posts, id=id)
+        cache.set(f"post_{id}", post, timeout=60)
+    # else:
+    #     print(f"文章{id}有缓存，直接返回")
+
     return render(request, "blog/post_detail.html", {"post": post})
 
 
@@ -25,6 +40,10 @@ def post_create(request):
             post.author = request.user
             post.pushlish_date = timezone.now()
             post.save()
+
+            cache.set(f"post_{post.id}", post, timeout=60)
+            cache.delete("posts")
+
             return redirect("post_detail", id=post.id)
     else:
         form = PostForm()
@@ -43,8 +62,14 @@ def post_edit(request, id):
     if request.method == "POST":
         form = PostForm(request.POST, instance=post)
         if form.is_valid():
-            form.save()
+            update_post = form.save()
+
+            cache.delete("posts")
+            cache.set(f"post_{id}", update_post, timeout=60)
+            # print("缓存更新成功")
+
             messages.success(request, "文章更新成功")
+
             return redirect("post_detail", id=id)
     else:
         form = PostForm(instance=post)
@@ -63,6 +88,9 @@ def post_delete(request, id):
         return redirect("post_detail", id=id)
 
     post.delete()
+    cache.delete(f"post_{id}")
+    cache.delete("posts")
+
     messages.success(request, "文章已删除")
     return redirect("post_list")
 

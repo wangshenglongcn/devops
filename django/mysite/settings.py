@@ -16,6 +16,27 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        # The hostname in LOCATION is the primary (service / master) name
+        "LOCATION": "redis://master/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.SentinelClient",
+            "SENTINELS": [
+                ("120.55.57.128", 26379),
+                ("120.55.57.128", 26380),
+                ("120.55.57.128", 26381),
+            ],
+            "SENTINEL_MASTER_NAME": "master",
+            "PASSWORD": "123qwe",
+            "SOCKET_CONNECT_TIMEOUT": 2,
+            "SOCKET_TIMEOUT": 2,
+            "CONNECTION_POOL_CLASS": "redis.sentinel.SentinelConnectionPool",
+            "CONNECTION_FACTORY": "django_redis.pool.SentinelConnectionFactory",
+        },
+    }
+}
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -24,9 +45,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-ij01_tbf+r#%fv%x#uf32aid9hfy#$t)=$@3ox1b80qhaze(dh"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["117.72.175.93"]
+ALLOWED_HOSTS = ["117.72.175.93", "localhost", "0.0.0.0"]
 
 
 # Application definition
