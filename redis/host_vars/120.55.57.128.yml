@@ -1,0 +1,3 @@
+redis_master_path: /usr1/django/ansible/redis_master.conf
+redis_sub_path: /usr1/django/ansible/redis_sub.conf
+sentinel_conf_path: /usr1/django/ansible/sentinel.conf
