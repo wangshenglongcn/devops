@@ -22,7 +22,7 @@ INSTALLED_APPS = [
 ]
 ```
 
-## 配置数据库
+## 配置MySQL数据库
 
 安装pymysql，配置mysite/__init__.py
 ```python
@@ -100,6 +100,15 @@ class Posts(models.Model):
 2. 增加STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 以便正常执行python manage.py collectstatic
     无其他适配的话会在跟manage.py同级目录下生产staticfiles目录
 3. 修改ALLOW_HOSTS，添加生产环境IP
+
+
+## 适配docker compose 启动
+
+通过Docker Compose配置Django和Nginx启动
+
+## 适配Redis缓存服务
+
+Redis主从节点+3个哨兵节点集群通过ansible自动化部署，详情见同一代码仓下ansible分支redis目录下代码
 
 ## 参考文档
 
