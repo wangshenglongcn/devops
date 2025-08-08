@@ -34,17 +34,6 @@
         state: directory
         mode: '0755'
 
-    - name: 拷贝redis配置文件
-      ansible.builtin.copy:
-        src: "{{ item.src  }}"
-        dest: "{{ item.dest }}"
-      loop:
-        - {src: redis_master.conf, dest: /opt/redis/redis_master.conf}
-        - {src: redis_sub.conf, dest: /opt/redis/redis_sub.conf}
-        - {src: sentinel.conf, dest: /opt/redis/sentinel1.conf}
-        - {src: sentinel.conf, dest: /opt/redis/sentinel2.conf}
-        - {src: sentinel.conf, dest: /opt/redis/sentinel3.conf}
-
     - name: 创建docker network网络
       community.docker.docker_network:
         name: redis_network
@@ -56,41 +45,76 @@
         state: absent
         force_kill: true
       loop:
-        - redis_master
-        - redis_sub
-        - redis_sentinel1
-        - redis_sentinel2
-        - redis_sentinel3
-        
+        - redis-6379
+        - redis-6380
+        - sentinel-26379
+        - sentinel-26380
+        - sentinel-26381
+    
+    - name: 清除旧配置文件
+      ansible.builtin.file:
+        name: "/opt/redis/{{ item }}.conf"
+        state: absent
+      loop:
+        - redis-6379
+        - redis-6380
+        - sentinel-26379
+        - sentinel-26380
+        - sentinel-26381
+
+    - name: 生成redis配置文件
+      ansible.builtin.template:
+        src: redis.conf.j2
+        dest: "/opt/redis/redis-{{ item.port }}.conf"
+      loop:
+        - {port: 6379, is_master: true}
+        - {port: 6380, is_master: false}
+    
+    - name: 生成3个哨兵配置文件
+      ansible.builtin.template:
+        src: sentinel.conf.j2
+        dest: "/opt/redis/sentinel-{{ item.port }}.conf"
+      loop:
+        - {port: 26379}
+        - {port: 26380}
+        - {port: 26381}
+    
+    - name: 确保目录下所有文件有权限读写
+      ansible.builtin.command: chmod -R 777 /opt/redis
+      become: true
+
     - name: 启动redis master/sub节点
       community.docker.docker_container:
-        name: "{{ item.name }}"
+        name: "redis-{{ item.port }}"
         image: redis:6.2
         state: started
         ports:
-          - "{{ item.port }}:6379"
+          - "{{ item.port }}:{{ item.port }}"
         networks:
           - name: redis_network
         volumes:
-          - "/opt/redis:/opt/redis"
-        command: ["redis-server", "{{ item.conf_path }}"]
+          - "/opt/redis:/opt/redis:rw"
+        command: ["redis-server", "/opt/redis/redis-{{ item.port }}.conf"]
+        user: root
       loop:
-        - {name: redis_master, port: 6379, conf_path: /opt/redis/redis_master.conf}
-        - {name: redis_sub, port: 6380, conf_path: /opt/redis/redis_master.conf}
-    
+        - {port: 6379}
+        - {port: 6380}
+
     - name: 启动3个哨兵节点
       community.docker.docker_container:
-        name: "{{ item.name }}"
+        name: "sentinel-{{ item.port }}"
         image: redis:6.2
         state: started
         ports:
-          - "{{ item.port }}:26379"
+          - "{{ item.port }}:{{ item.port }}"
         networks:
           - name: redis_network
         volumes:
-          - "/opt/redis:/opt/redis"
-        command: ["redis-sentinel", "{{ item.conf_path }}"]
+          - "/opt/redis:/opt/redis:rw"
+        command: ["redis-sentinel", "/opt/redis/sentinel-{{ item.port }}.conf"]
+        user: root
       loop:
-        - {name: redis_sentinel1, port: 26379, conf_path: /opt/redis/sentinel1.conf}
-        - {name: redis_sentinel2, port: 26380, conf_path: /opt/redis/sentinel2.conf}
-        - {name: redis_sentinel3, port: 26381, conf_path: /opt/redis/sentinel3.conf}
+        - {port: 26379}
+        - {port: 26380}
+        - {port: 26381}
+
