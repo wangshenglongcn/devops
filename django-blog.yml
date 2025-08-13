@@ -1,5 +1,5 @@
 # django blog service
-apiVersion: apps/v1
+apiVersion: v1
 kind: Service
 metadata:
   name: django-service
@@ -36,6 +36,7 @@ spec:
       containers:
         - name: django-blog
           image: django-blog:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8000
           env:
