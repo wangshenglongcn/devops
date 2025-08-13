@@ -16,27 +16,43 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")  # 默认值为 localhost
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")  # 默认 Redis 端口
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")  # 默认没有密码
+
 CACHES = {
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        # The hostname in LOCATION is the primary (service / master) name
-        "LOCATION": "redis://master/0",
+        "BACKEND": "django_redis.cache.RedisCache",  # 使用 django-redis
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",  # Redis 服务的 URL
         "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.SentinelClient",
-            "SENTINELS": [
-                ("120.55.57.128", 26379),
-                ("120.55.57.128", 26380),
-                ("120.55.57.128", 26381),
-            ],
-            "SENTINEL_MASTER_NAME": "master",
-            "PASSWORD": "123qwe",
-            "SOCKET_CONNECT_TIMEOUT": 2,
-            "SOCKET_TIMEOUT": 2,
-            "CONNECTION_POOL_CLASS": "redis.sentinel.SentinelConnectionPool",
-            "CONNECTION_FACTORY": "django_redis.pool.SentinelConnectionFactory",
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "PASSWORD": REDIS_PASSWORD,  # 传入密码（如果有的话）
         },
     }
 }
+
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         # The hostname in LOCATION is the primary (service / master) name
+#         "LOCATION": "redis://master/0",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.SentinelClient",
+#             "SENTINELS": [
+#                 ("120.55.57.128", 26379),
+#                 ("120.55.57.128", 26380),
+#                 ("120.55.57.128", 26381),
+#             ],
+#             "SENTINEL_MASTER_NAME": "master",
+#             "PASSWORD": "123qwe",
+#             "SOCKET_CONNECT_TIMEOUT": 2,
+#             "SOCKET_TIMEOUT": 2,
+#             "CONNECTION_POOL_CLASS": "redis.sentinel.SentinelConnectionPool",
+#             "CONNECTION_FACTORY": "django_redis.pool.SentinelConnectionFactory",
+#         },
+#     }
+# }
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -47,7 +63,7 @@ SECRET_KEY = "django-insecure-ij01_tbf+r#%fv%x#uf32aid9hfy#$t)=$@3ox1b80qhaze(dh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["117.72.175.93", "localhost", "0.0.0.0"]
+ALLOWED_HOSTS = ["117.72.175.93", "localhost", "0.0.0.0", "django-service"]
 
 
 # Application definition
@@ -95,14 +111,30 @@ WSGI_APPLICATION = "mysite.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.mysql",
+#         "NAME": "mydb",
+#         "USER": "django_user",
+#         "PASSWORD": "password",
+#         "HOST": "117.72.175.93",
+#         "PORT": "3307",
+#     }
+# }
+
+DATABASE_HOST = os.getenv("DATABASE_HOST", "localhost")  # 默认值为localhost
+DATABASE_NAME = os.getenv("DATABASE_NAME", "mydb")
+DATABASE_USER = os.getenv("DATABASE_USER", "root")
+DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD", "password")
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "mydb",
-        "USER": "django_user",
-        "PASSWORD": "password",
-        "HOST": "117.72.175.93",
-        "PORT": "3307",
+        "ENGINE": "django.db.backends.mysql",  # 使用 MySQL 数据库
+        "NAME": DATABASE_NAME,  # 使用环境变量中的数据库名
+        "USER": DATABASE_USER,  # 使用环境变量中的用户名
+        "PASSWORD": DATABASE_PASSWORD,  # 使用环境变量中的密码
+        "HOST": DATABASE_HOST,  # 使用环境变量中的主机地址
+        "PORT": "3306",  # MySQL 默认端口
     }
 }
 
