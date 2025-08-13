@@ -1,0 +1,120 @@
+- name: Build Redis master and one sentinel node
+  hosts: aliyun
+  become: true
+  tasks:
+    - name: 确保已经安装docker
+      ansible.builtin.apt:
+        name: docker.io
+        state: present
+        update_cache: true
+
+    - name: docker换源
+      ansible.builtin.copy:
+        content: |
+          {
+            "registry-mirrors": [
+              "https://docker.m.daocloud.io"
+            ]
+          }
+        dest: /etc/docker/daemon.json
+
+    - name: docker重启
+      ansible.builtin.service:
+        name: docker
+        state: restarted
+
+    - name: 拉取Redis镜像
+      community.docker.docker_image:
+        name: redis:6.2
+        source: pull
+    
+    - name: 确保目录存在
+      ansible.builtin.file:
+        path: /opt/redis
+        state: directory
+        mode: '0755'
+
+    - name: 创建docker network网络
+      community.docker.docker_network:
+        name: redis_network
+        state: present
+
+    - name: 删除旧容器
+      community.docker.docker_container:
+        name: "{{ item }}"
+        state: absent
+        force_kill: true
+      loop:
+        - redis-6379
+        - redis-6380
+        - sentinel-26379
+        - sentinel-26380
+        - sentinel-26381
+    
+    - name: 清除旧配置文件
+      ansible.builtin.file:
+        name: "/opt/redis/{{ item }}.conf"
+        state: absent
+      loop:
+        - redis-6379
+        - redis-6380
+        - sentinel-26379
+        - sentinel-26380
+        - sentinel-26381
+
+    - name: 生成redis配置文件
+      ansible.builtin.template:
+        src: redis.conf.j2
+        dest: "/opt/redis/redis-{{ item.port }}.conf"
+      loop:
+        - {port: 6379, is_master: true}
+        - {port: 6380, is_master: false}
+    
+    - name: 生成3个哨兵配置文件
+      ansible.builtin.template:
+        src: sentinel.conf.j2
+        dest: "/opt/redis/sentinel-{{ item.port }}.conf"
+      loop:
+        - {port: 26379}
+        - {port: 26380}
+        - {port: 26381}
+    
+    - name: 确保目录下所有文件有权限读写
+      ansible.builtin.command: chmod -R 777 /opt/redis
+      become: true
+
+    - name: 启动redis master/sub节点
+      community.docker.docker_container:
+        name: "redis-{{ item.port }}"
+        image: redis:6.2
+        state: started
+        ports:
+          - "{{ item.port }}:{{ item.port }}"
+        networks:
+          - name: redis_network
+        volumes:
+          - "/opt/redis:/opt/redis:rw"
+        command: ["redis-server", "/opt/redis/redis-{{ item.port }}.conf"]
+        user: root
+      loop:
+        - {port: 6379}
+        - {port: 6380}
+
+    - name: 启动3个哨兵节点
+      community.docker.docker_container:
+        name: "sentinel-{{ item.port }}"
+        image: redis:6.2
+        state: started
+        ports:
+          - "{{ item.port }}:{{ item.port }}"
+        networks:
+          - name: redis_network
+        volumes:
+          - "/opt/redis:/opt/redis:rw"
+        command: ["redis-sentinel", "/opt/redis/sentinel-{{ item.port }}.conf"]
+        user: root
+      loop:
+        - {port: 26379}
+        - {port: 26380}
+        - {port: 26381}
+

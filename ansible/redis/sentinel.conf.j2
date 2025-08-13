@@ -1,0 +1,8 @@
+port {{ item.port }}
+
+sentinel monitor master 120.55.57.128 6379 2
+
+
+# 通过密码访问主从节点
+sentinel auth-pass master 123qwe
+

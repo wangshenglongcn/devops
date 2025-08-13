@@ -1,0 +1,22 @@
+port {{ item.port }}
+bind 0.0.0.0
+
+# rdb
+save 900 1
+save 300 10
+save 60 1000
+
+# aof
+appendonly yes
+appendfsync everysec
+
+# password
+requirepass 123qwe
+
+
+# 主从配置, materauth保证从节点可以跟主节点通信
+masterauth 123qwe
+
+{% if not item.is_master %}
+replicaof 120.55.57.128 6379
+{% endif %}

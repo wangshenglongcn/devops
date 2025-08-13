@@ -1,0 +1,20 @@
+- name: demo
+  hosts: all
+  vars_files:
+    - common.yml
+  vars:
+    my_string: playbook var
+
+  tasks:
+    - name: first print
+      debug:
+        msg: "my_string is: {{ my_string }}"
+    - set_fact:
+        my_string: "set fact var"
+    - name:
+      include_vars: common.yml
+    - name: second print
+      vars:
+        my_string: task var
+      debug:
+        msg: "my_string is: {{ my_string }}"
