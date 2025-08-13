@@ -1,0 +1,94 @@
+# redis headless service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-svc
+  labels:
+    app: redis
+spec:
+  clusterIP: None
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+
+---
+
+# redis configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis
+data:
+  redis.conf: |
+    port 6379
+    bind 0.0.0.0
+    requirepass 123qwe
+    masterauth 123qwe
+  start-redis.sh: |
+    #!/bin/bash
+
+    set -e
+
+    if [[ "$HOSTNAME" == *-0 ]]; then
+      echo "当前为主节点"
+      exec redis-server /home/redis.conf
+    else
+      echo "当前为从节点，连接到主节点redis-0.redis 6379"
+      exec redis-server /home/redis.conf --slaveof redis-0.redis 6379
+    fi
+
+
+---
+
+# redis statefulset
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  # 选择headless service
+  serviceName: "redis-svc"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      name: redis
+      labels:
+        app: redis
+    spec:
+      initContainers:
+        - name: set-permissions
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c", "cp /home/start-redis.sh /tmp/start-redis.sh && chmod +x /tmp/start-redis.sh"]
+          volumeMounts:
+            - name: config
+              mountPath: /home/
+            - name: tmp
+              mountPath: /tmp/
+      containers:
+        - name: redis
+          image: redis:6.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
+          command: ["/bin/bash", "-c", "/tmp/start-redis.sh"]
+          volumeMounts:
+            - name: config
+              mountPath: /home/
+            - name: tmp
+              mountPath: /tmp/
+
+      volumes:
+        - name: config
+          configMap:
+            name: redis
+        - name: tmp
+          emptyDir: {}
+
