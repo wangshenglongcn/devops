@@ -20,11 +20,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: django-deploy
+  name: django
   labels:
     app: django
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: django
@@ -35,7 +35,22 @@ spec:
     spec:
       containers:
         - name: django-blog
-          image: django-blog:local
+          image: django-blog:latest
           ports:
             - containerPort: 8000
+          env:
+            - name: REDIS_HOST
+              value: redis-svc  # Redis 服务的名字
+            - name: REDIS_PORT
+              value: "6379"  # Redis 默认端口
+            - name: REDIS_PASSWORD
+              value: "123qwe"  # Redis 密码（如果有）
+            - name: DATABASE_HOST
+              value: mysql-svc  # 数据库服务的名字
+            - name: DATABASE_NAME
+              value: mydb
+            - name: DATABASE_USER
+              value: root
+            - name: DATABASE_PASSWORD
+              value: password
 
