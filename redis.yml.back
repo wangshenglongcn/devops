@@ -6,7 +6,7 @@ metadata:
   labels:
     app: redis
 spec:
-  clusterPort: None
+  clusterIP: None
   selector:
     app: redis
   ports:
@@ -23,13 +23,12 @@ metadata:
   labels:
     app: sentinel
 spec:
-  clusterPort: None
+  clusterIP: None
   selector:
     app: sentinel
-  port:
+  ports:
     - port: 26379
       targetPort: 26379
-      nodePort: 30081
 
 ---
 
@@ -46,7 +45,7 @@ data:
     masterauth 123qwe
   sentinel.confg: |
     port 26379
-    sentinel monitor master 127.0.0.1 6379 2
+    sentinel monitor master redis-0.redis 6379 2
     sentinel auth-pass master 123qwe
   start-redis.sh: |
     #!/bin/bash
@@ -74,7 +73,7 @@ metadata:
 spec:
   # 选择headless service
   serviceName: "redis-svc"
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: redis
@@ -112,7 +111,7 @@ metadata:
 spec:
   # 选择headless service
   serviceName: "sentinel-svc"
-  replicas: 3
+  replicas: 0
   selector:
     matchLabels:
       app: sentinel

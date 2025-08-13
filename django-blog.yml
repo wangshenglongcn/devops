@@ -35,7 +35,7 @@ spec:
     spec:
       containers:
         - name: django-blog
-          image: django-blog:20250812
+          image: django-blog:local
           ports:
             - containerPort: 8000
 
