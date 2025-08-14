@@ -1,3 +1,69 @@
+## 使用 K3S 安装 K8S 集群
+
+### master
+
+安装
+```shell
+curl –sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | \
+INSTALL_K3S_MIRROR=cn sh -s - \
+--system-default-registry "registry.cn-hangzhou.aliyuncs.com"
+```
+
+配置NODE_IP，或者在启动时附加K3S_NODE_IP
+```shell
+vim /etc/systemd/system/k3s.service.env
+# 添加以下内容
+K3S_NODE_IP=117.72.175.93
+
+# 或者
+cat > /etc/systemd/system/k3s.service.env << EOF
+K3S_NODE_IP=117.72.175.93
+EOF
+```
+
+换源
+```shell
+mkdir -p /etc/rancher/k3s
+cat > /etc/rancher/k3s/registries.yaml << EOF
+mirrors:
+  docker.io:
+    endpoint:
+      - "https://docker.xuanyuan.me"
+EOF
+systemctl restart k3s
+```
+
+获取TOKEN
+```shell
+TOKEN=$(cat /var/lib/rancher/k3s/server/node-token)
+```
+
+### agent
+
+安装
+```shell
+curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | \
+INSTALL_K3S_MIRROR=cn \
+K3S_URL=https://${MASTER_IP}:6443 \
+K3S_TOKEN=${TOKEN}$ \
+K3S_NODE_IP=${AGENT_IP} \
+sh - 
+```
+
+换源
+```shell
+mkdir -p /etc/rancher/k3s
+cat > /etc/rancher/k3s/registries.yaml << EOF
+mirrors:
+  docker.io:
+    endpoint:
+      - "https://docker.xuanyuan.me"
+EOF
+systemctl restart k3s-agent
+```
+
+接下来就是正常使用kubectl了
+
 ## 语法
 
 关于 Deployment、Service、StatefulSet 等语法可以参考 k8s 官方文档。
