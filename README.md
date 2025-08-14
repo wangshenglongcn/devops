@@ -3,7 +3,7 @@
 
 实现Django博客，并通过k8s集群部署Django、MySQL、Redis
 
-效果请见：http://117.72.175.93/
+效果请见：http://117.72.175.93:30080/
 
 ## Django搭建过程
 
