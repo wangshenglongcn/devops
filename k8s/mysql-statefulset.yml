@@ -32,6 +32,16 @@ spec:
       labels:
         app: mysql
     spec:
+      # 固定节点调度
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - lavm-w6rwxbp5tp   # 替换为你希望 MySQL 所在节点
       containers:
         - name: mysql
           image: mysql:8.0
