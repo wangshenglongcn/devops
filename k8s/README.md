@@ -45,7 +45,7 @@ TOKEN=$(cat /var/lib/rancher/k3s/server/node-token)
 curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | \
 INSTALL_K3S_MIRROR=cn \
 K3S_URL=https://${MASTER_IP}:6443 \
-K3S_TOKEN=${TOKEN}$ \
+K3S_TOKEN=${TOKEN} \
 K3S_NODE_IP=${AGENT_IP} \
 sh - 
 ```
