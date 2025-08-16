@@ -6,8 +6,7 @@
 账号密码可以注册
 
 Grafana 链接：http://120.55.57.128:3000
-账号：admin，密码：123qwe123???
-在Dashboards中查看监控面板
+账号：admin，密码：123qwe123???，在Dashboards中查看监控面板
 
 ## 仓库结构
 - `django/`：Django 示例应用，支持 Docker 打包镜像后用 Docker/K8s 部署
@@ -26,3 +25,4 @@ Grafana 链接：http://120.55.57.128:3000
 
 ## 技术栈
 Python, Django, Docker, Kubernetes, Jenkins, Ansible, Prometheus, Grafana, Terraform
+
