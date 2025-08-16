@@ -1,4 +1,3 @@
-
 # DevOps
 
 这是我的个人 DevOps / SRE 学习与实践作品集，涵盖了从 **容器化 → K8s 部署 → CI/CD → 监控 → IaC → GitOps** 的完整流程。
@@ -27,5 +26,3 @@ Grafana 链接：http://120.55.57.128:3000
 
 ## 技术栈
 Python, Django, Docker, Kubernetes, Jenkins, Ansible, Prometheus, Grafana, Terraform
-
-
