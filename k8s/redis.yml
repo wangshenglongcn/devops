@@ -62,6 +62,16 @@ spec:
       labels:
         app: redis
     spec:
+      # 固定节点调度
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - lavm-w6rwxbp5tp   # 替换为你希望 MySQL 所在节点
       initContainers:
         - name: set-permissions
           image: busybox
@@ -91,4 +101,5 @@ spec:
             name: redis
         - name: tmp
           emptyDir: {}
+
 
