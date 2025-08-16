@@ -1,0 +1,137 @@
+# redis headless service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-svc
+  labels:
+    app: redis
+spec:
+  clusterIP: None
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+
+---
+
+# sentinel headless service
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentinel-svc
+  labels:
+    app: sentinel
+spec:
+  clusterIP: None
+  selector:
+    app: sentinel
+  ports:
+    - port: 26379
+      targetPort: 26379
+
+---
+
+# redis configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis
+data:
+  redis.conf: |
+    port 6379
+    bind 0.0.0.0
+    requirepass 123qwe
+    masterauth 123qwe
+  sentinel.confg: |
+    port 26379
+    sentinel monitor master redis-0.redis 6379 2
+    sentinel auth-pass master 123qwe
+  start-redis.sh: |
+    #!/bin/bash
+
+    set -e
+
+    if [[ "$HOSTNAME" == *-0 ]]; then
+      echo "当前为主节点"
+      exec redis-server /etc/redis/redis.conf
+    else
+      echo "当前为从节点，连接到主节点redis-0.redis 6379"
+      exec redis-server /etc/redis/redis.conf --slaveof redis-0.redis 6379
+    fi
+
+
+---
+
+# redis statefulset
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-statefulset
+  labels:
+    app: redis
+spec:
+  # 选择headless service
+  serviceName: "redis-svc"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      name: redis
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:6.2
+          ports:
+            - containerPort: 6379
+          command: ["/bin/bash", "-c", "/home/start-redis.sh"]
+          volumeMounts:
+            - name: config
+              mountPath: /home/
+
+      volumes:
+        - name: config
+          configMap:
+            name: redis
+
+
+---
+
+# sentinel statefulset
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sentinel-statefulset
+  labels:
+    app: sentinel
+spec:
+  # 选择headless service
+  serviceName: "sentinel-svc"
+  replicas: 0
+  selector:
+    matchLabels:
+      app: sentinel
+  template:
+    metadata:
+      name: sentinel
+      labels:
+        app: sentinel
+    spec:
+      containers:
+        - name: sentinel
+          image: redis:6.2
+          ports:
+            - containerPort: 26379
+          command: ["redis-sentinel", "/home/sentinel.conf"]
+          volumeMounts:
+            - name: config
+              mountPath: /home/
+
+      volumes:
+        - name: config
+          configMap:
+            name: redis

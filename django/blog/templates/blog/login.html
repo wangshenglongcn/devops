@@ -1,0 +1,28 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<div class="card mx-auto" style="background-color: #1e1e1e; color: white; width: 30vw;">
+    <div class="card-body">
+        <h2 class="card-title">用户登录</h2>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="username" class="form-label">用户名</label>
+                <input type="text" name="username" id="username" class="form-control" placeholder="请输入用户名" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">密码</label>
+                <input type="password" name="password" id="password" class="form-control" placeholder="请输入密码" required>
+            </div>
+            <button type="submit" class="btn btn-primary">登录</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
