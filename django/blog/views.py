@@ -3,9 +3,15 @@ from django.utils import timezone
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.core.cache import cache
+from django.http import HttpResponse
 
 from .models import Posts
 from .forms import PostForm, RegisterForm
+from .metrics import prometheus_metrics
+
+
+def metrics(request):
+    return HttpResponse(prometheus_metrics(), content_type="text/plain")
 
 
 def post_list(request):
