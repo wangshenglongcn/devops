@@ -12,7 +12,7 @@ Grafana 链接：http://120.55.57.128:3000
 - `django/`：Django 示例应用，支持 Docker 打包镜像后用 Docker/K8s 部署
 - `k8s/`：通过 K8S 集群部署 Django、MySQL、Redis 的配置文件
 - `monitoring/`：Prometheus + Grafana 监控 MySQL、Redis 指标配置文件
-- `custom_exporter/`：自定义 Python Exporter，采集自定义指标（待实现）
+- `custom_exporter/`：自定义 Python Exporter，采集自定义指标，这部分代码放到django/blog/metrics.py、django/blog/middleware.py中
 - `ci_cd/`：Jenkins Pipeline、Ansible 自动化 （待实现）
 - `lac/`：Terraform + Ansible 管理资源（待实现）
 - `docs/`：学习笔记和面试总结（待完善）
