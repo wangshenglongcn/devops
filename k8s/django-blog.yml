@@ -45,7 +45,7 @@ spec:
                       - lavm-w6rwxbp5tp   # 替换为你希望 MySQL 所在节点
       containers:
         - name: django-blog
-          image: django-blog:latest
+          image: django-blog:v2
           imagePullPolicy: Never
           ports:
             - containerPort: 8000
