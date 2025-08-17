@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt -i https://mirrors.aliyun.com
 COPY . .
 
 # 给脚本添加执行权限
-RUN chmod +x ./start.sh
+RUN chmod +x ./startasdfasdf.sh
 
 # 直接运行脚本
 CMD ["./start.sh"]
