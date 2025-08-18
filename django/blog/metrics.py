@@ -1,5 +1,7 @@
 import queue, threading
 from collections import Counter, defaultdict
+from .models import Posts
+from django.contrib.auth.models import User
 
 EVENTS = queue.SimpleQueue()
 REQUEST_COUNT = Counter()  # (method, path, status) -> count
@@ -49,5 +51,16 @@ def prometheus_metrics():
             f'http_request_milliseconds_avg{{method="{method}", path="{path}"}} {avg_time:.6f}'
         )
 
-    return "\n".join(lines)
+    # 文章总数
+    lines.append("# HELP blog_posts_total Total number of blog posts")
+    lines.append("# TYPE blog_posts_total gauge")
+    total_posts = Posts.objects.count()
+    lines.append(f"blog_posts_total {total_posts}")
 
+    # 用户总数
+    lines.append("# HELP blog_users_total Total number of blog users")
+    lines.append("# TYPE blog_users_total gauge")
+    total_users = User.objects.count()
+    lines.append(f"blog_users_total {total_users}")
+
+    return "\n".join(lines)
