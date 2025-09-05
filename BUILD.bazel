@@ -1,0 +1,17 @@
+java_library(
+    name = "app_lib",
+    srcs = ["src/main/java/com/example/App.java"],
+    deps = [
+        "@maven//:org_slf4j_slf4j_api",  # 编译依赖
+    ],
+)
+
+java_binary(
+    name = "app",
+    main_class = "com.example.App",
+    runtime_deps = [
+        ":app_lib",                       # 引用 java_library
+        "@maven//:org_slf4j_slf4j_simple", # 运行时实现
+    ],
+)
+

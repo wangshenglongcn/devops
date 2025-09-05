@@ -1,0 +1,23 @@
+# 声明模块依赖
+bazel_dep(name = "rules_jvm_external", version = "5.3")
+
+# 加载该模块暴露的Bzlmod扩展，并赋予自定义别名
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+
+# 下载并内部定义依赖的仓库
+# artifacts：直接把pom.xml里的依赖--GAV坐标，搬过来
+# repositories：依赖下载源
+maven.install(
+    artifacts = [
+        "junit:junit:4.13.2",
+	"org.slf4j:slf4j-api:1.7.30",
+	"org.slf4j:slf4j-simple:1.7.30",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+    ],
+)
+
+# 将上一步生成的外部仓库导出为外部可见的bazel仓库名
+# 结果是可以在BUILD中引用@maven了
+use_repo(maven, "maven")
