@@ -1,5 +1,0 @@
-py_library(
-    name = "utils",
-    srcs = ["utils.py"],
-    visibility = ["//py/main:__pkg__"],
-)

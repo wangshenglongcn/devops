@@ -1,0 +1,7 @@
+# BUILD.bazel
+py_binary(
+    name = "download_repo",
+    srcs = ["download_repo.py"],
+    main = "download_repo.py",
+)
+

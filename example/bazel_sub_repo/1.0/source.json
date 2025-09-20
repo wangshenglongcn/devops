@@ -1,0 +1,5 @@
+{
+    "name":"bazel_sub_repo",
+    "remote":"git@github.com:wangshenglongcn/bazel_sub_repo.git",
+    "commit":"77864cd44a8528c588efd9149ca3389e9deb9939"
+}
