@@ -1,5 +1,0 @@
-java_binary(
-    name = "app",
-    srcs = ["App.java"],
-    main_class = "App",
-)
