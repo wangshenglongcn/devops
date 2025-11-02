@@ -1,5 +1,4 @@
 import paramiko
-import config
 from db import DB
 from encrypt import PasswordCipher
 
@@ -9,7 +8,7 @@ from encrypt import PasswordCipher
 # -------------------
 class Linux:
     def __init__(self, ip: str, user: str, password: str, timeout: int = 30):
-        """通过ip、user、password、timeout初始化一个连接"""
+        """通过ip、user、password、timeout初始化一个linux连接"""
         self._ip = ip
         self._user = user
         self._password = password
@@ -18,7 +17,8 @@ class Linux:
 
     def exec_command(self, cmd: str) -> None:
         """执行linux命令"""
-        stdin, stdout, stderr = self._client.exec_command(cmd)
+        env = {"TERM": "xterm"}
+        stdin, stdout, stderr = self._client.exec_command(cmd, environment=env)
         out = stdout.read().decode()
         err = stderr.read().decode()
         if err:
@@ -27,7 +27,7 @@ class Linux:
         print(out)
 
     def start(self) -> None:
-        """初始化数据库连接"""
+        """初始化linux机器连接"""
         if self._client:
             return
 
@@ -48,7 +48,7 @@ class Linux:
         print(f"Connected to {self._ip}")
 
     def stop(self) -> None:
-        """关闭数据库连接"""
+        """关闭linux机器连接"""
         if self._client:
             self._client.close()
             self._client = None
@@ -71,12 +71,15 @@ class Linux:
 # 主函数
 # -------------------
 def main():
+    cmds = ["uptime", "df -h", "free -h"]
+
     password_cipher = PasswordCipher()
     with DB() as conn:
         for host in conn.query_all():
             password = password_cipher.decrypt(host.password)
             with Linux(host.ip, host.user, password) as linux:
-                linux.exec_command(config.cmd)
+                for cmd in cmds:
+                    linux.exec_command(cmd)
 
 
 if __name__ == "__main__":
