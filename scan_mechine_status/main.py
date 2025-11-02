@@ -1,17 +1,23 @@
 import paramiko
 import config
+from db import DB
+from encrypt import PasswordCipher
 
 
+# -------------------
+# Host连接、操作类
+# -------------------
 class Linux:
-    # 通过ip、user、password、timeout初始化一个连接
-    def __init__(self, ip, user, password, timeout=30):
+    def __init__(self, ip: str, user: str, password: str, timeout: int = 30):
+        """通过ip、user、password、timeout初始化一个连接"""
         self._ip = ip
         self._user = user
         self._password = password
         self._timeout = timeout
         self._client = None
 
-    def exec_command(self, cmd):
+    def exec_command(self, cmd: str) -> None:
+        """执行linux命令"""
         stdin, stdout, stderr = self._client.exec_command(cmd)
         out = stdout.read().decode()
         err = stderr.read().decode()
@@ -20,7 +26,8 @@ class Linux:
 
         print(out)
 
-    def start(self):
+    def start(self) -> None:
+        """初始化数据库连接"""
         if self._client:
             return
 
@@ -40,7 +47,8 @@ class Linux:
 
         print(f"Connected to {self._ip}")
 
-    def stop(self):
+    def stop(self) -> None:
+        """关闭数据库连接"""
         if self._client:
             self._client.close()
             self._client = None
@@ -59,10 +67,16 @@ class Linux:
         self.stop()
 
 
+# -------------------
+# 主函数
+# -------------------
 def main():
-    for host in config.hosts:
-        with Linux(**host) as linux:
-            linux.exec_command(config.cmd)
+    password_cipher = PasswordCipher()
+    with DB() as conn:
+        for host in conn.query_all():
+            password = password_cipher.decrypt(host.password)
+            with Linux(host.ip, host.user, password) as linux:
+                linux.exec_command(config.cmd)
 
 
 if __name__ == "__main__":
