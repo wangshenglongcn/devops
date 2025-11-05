@@ -1,5 +1,5 @@
 import paramiko
-from db import DB
+from db import HostDB, HostStatusDB
 from encrypt import PasswordCipher
 
 
@@ -15,7 +15,7 @@ class Linux:
         self._timeout = timeout
         self._client = None
 
-    def exec_command(self, cmd: str) -> None:
+    def exec_command(self, cmd: str) -> str:
         """执行linux命令"""
         env = {"TERM": "xterm"}
         stdin, stdout, stderr = self._client.exec_command(cmd, environment=env)
@@ -24,7 +24,19 @@ class Linux:
         if err:
             raise Exception(f"Error on {self._ip}:", err)
 
-        print(out)
+        return out
+
+    def get_cpu(self, cmd=""):
+        pass
+
+    def get_mem(self):
+        pass
+
+    def get_disk(self):
+        pass
+
+    def get_status(self):
+        pass
 
     def start(self) -> None:
         """初始化linux机器连接"""
@@ -74,12 +86,16 @@ def main():
     cmds = ["uptime", "df -h", "free -h"]
 
     password_cipher = PasswordCipher()
-    with DB() as conn:
-        for host in conn.query_all():
-            password = password_cipher.decrypt(host.password)
-            with Linux(host.ip, host.user, password) as linux:
-                for cmd in cmds:
-                    linux.exec_command(cmd)
+    with HostStatusDB() as host_status:
+        with HostDB() as conn:
+            for host in conn.query_all():
+                password = password_cipher.decrypt(host.password)
+                with Linux(host.ip, host.user, password) as linux:
+                    cpu = linux.get_cpu()
+                    mem = linux.get_mem()
+                    disk = linux.get_disk()
+                    status = linux.get_status()
+                    host_status.insert(host.ip, cpu, mem, disk, status)
 
 
 if __name__ == "__main__":
