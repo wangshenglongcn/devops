@@ -108,7 +108,14 @@ class HostDB(DB):
 class HostStatusDB(DB):
     model = HostStatus
 
-    def insert(self, ip: str, cpu: float, mem: float, disk: float, status: str) -> None:
+    def insert(
+        self,
+        ip: str,
+        cpu: float,
+        mem: float,
+        disk: float,
+        status: str,
+    ) -> None:
         """插入主机状态记录"""
         try:
             self.model.create(ip=ip, cpu=cpu, mem=mem, disk=disk, status=status)
