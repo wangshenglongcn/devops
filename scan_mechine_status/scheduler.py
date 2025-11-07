@@ -4,6 +4,7 @@ from encrypt import PasswordCipher
 import socket
 from typing import Tuple
 import re
+import time
 
 
 # -------------------
@@ -123,10 +124,7 @@ class Linux:
         self.stop()
 
 
-# -------------------
-# 主函数
-# -------------------
-def main():
+def scheduler():
     password_cipher = PasswordCipher()
     with HostStatusDB() as host_status:
         with HostDB() as conn:
@@ -140,6 +138,16 @@ def main():
                         mem = linux.get_mem()
                         disk = linux.get_disk()
                         host_status.insert(host.ip, cpu, mem, disk, "online")
+
+
+# -------------------
+# 主函数
+# -------------------
+def main():
+    while True:
+        print("执行任务中……")
+        scheduler()
+        time.sleep(60)  # 每 60 秒执行一次
 
 
 if __name__ == "__main__":
