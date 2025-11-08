@@ -1,16 +1,30 @@
-from flask import Flask, render_template
+from fastapi import FastAPI
+from pydantic import BaseModel
 from db import HostStatusDB
+from typing import List
+from datetime import datetime
 
-app = Flask(__name__)
+
+app = FastAPI()
 
 
-@app.route("/")
-def index():
+# -------------------
+# 定义pydantic模型
+# -------------------
+class HostStatusSchema(BaseModel):
+    ip: str
+    cpu: float
+    memory: float
+    disk: float
+    status: str
+    created_at: datetime
+    batch_id: str
+
+
+# -------------------
+# 定义/对应的返回数据
+# -------------------
+@app.get("/", response_model=List[HostStatusSchema])
+def read_root():
     with HostStatusDB() as conn:
-        hosts = conn.query_status()
-
-    return render_template("index.html", hosts=hosts)
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)
+        return conn.query_status()
