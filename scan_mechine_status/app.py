@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from db import HostStatusDB
 from typing import List
 from datetime import datetime
+from db.repositories.host_status_db import HostStatusDB
 
 
 app = FastAPI()

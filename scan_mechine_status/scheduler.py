@@ -1,5 +1,6 @@
 import paramiko
-from db import HostDB, HostStatusDB
+from db.repositories.host_db import HostDB
+from db.repositories.host_status_db import HostStatusDB
 from encrypt import PasswordCipher
 import socket
 from typing import Tuple

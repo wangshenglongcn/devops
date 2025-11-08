@@ -1,3 +1,3 @@
 **/__pycache__
-scan_mechine_status/config.py
 scan_mechine_status/secret.key
+**/.env
