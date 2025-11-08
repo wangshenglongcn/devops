@@ -126,18 +126,19 @@ class Linux:
 
 def scheduler():
     password_cipher = PasswordCipher()
+    batch_id = str(int(time.time()))
     with HostStatusDB() as host_status:
         with HostDB() as conn:
             for host in conn.query_all():
                 password = password_cipher.decrypt(host.password)
                 with Linux(host.ip, host.user, password) as linux:
                     if not linux.alive:
-                        host_status.insert(host.ip, 0.0, 0.0, 0.0, "offline")
+                        host_status.insert(host.ip, 0.0, 0.0, 0.0, "offline", batch_id)
                     else:
                         cpu = linux.get_cpu()
                         mem = linux.get_mem()
                         disk = linux.get_disk()
-                        host_status.insert(host.ip, cpu, mem, disk, "online")
+                        host_status.insert(host.ip, cpu, mem, disk, "online", batch_id)
 
 
 # -------------------
@@ -152,3 +153,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # scheduler()

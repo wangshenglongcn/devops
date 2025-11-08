@@ -37,6 +37,7 @@ class HostStatus(Base):
     memory = FloatField()
     disk = FloatField()
     status = CharField()  # offline or online
+    batch_id = CharField()  # 采集id
     created_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
@@ -109,20 +110,32 @@ class HostStatusDB(DB):
     model = HostStatus
 
     def insert(
-        self,
-        ip: str,
-        cpu: float,
-        mem: float,
-        disk: float,
-        status: str,
+        self, ip: str, cpu: float, mem: float, disk: float, status: str, batch_id: str
     ) -> None:
         """插入主机状态记录"""
         try:
-            self.model.create(ip=ip, cpu=cpu, mem=mem, disk=disk, status=status)
-        except IntegrityError:
-            print(f"Duplicate entry skipped: {ip}")
+            self.model.create(
+                ip=ip, cpu=cpu, memory=mem, disk=disk, status=status, batch_id=batch_id
+            )
         except Exception as e:
-            print(f"Insert failed for {ip}: {e}")
+            print(f"[ERROR] Insert failed for {ip}: {e}")
+
+    def get_latest_batch_id(self) -> int:
+        """获取最新的采集id"""
+        latest_batch_id = (
+            self.model.select(self.model.batch_id)
+            .order_by(self.model.created_at.desc())
+            .limit(1)
+            .scalar()  # scalar获取具体值
+        )
+        return latest_batch_id
+
+    def query_status(self) -> List[Model]:
+        """查询最新采集的数据"""
+        batch_id = self.get_latest_batch_id()
+        host_status = self.model.select().where(self.model.batch_id == batch_id)
+
+        return host_status
 
 
 # -------------------
